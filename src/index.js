@@ -58,7 +58,7 @@ app.use('/', routes);
 const users = {};
 
 io.on("connection", (socket) => {
-    console.log("connected");
+    //console.log("connected");
 
     // Cuando un usuario se conecta, Guarda su email junto con un socket ID generado automaticamente
     socket.on('login', (email) => {
@@ -84,6 +84,7 @@ io.on("connection", (socket) => {
 
         // checa si esta conectado y si no se lo madrea... digo nomas lo guarda en la db
         if (users[receptor]) {
+            console.log("entro este mensaje: ", message)
             io.to(users[receptor]).emit('private_message', { sender, message });
 
             const pubKeyInfo = await publicKey.findOne({ userId: receptor});

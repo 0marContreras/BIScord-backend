@@ -15,7 +15,7 @@ const lobbyMessagesModel = require('./models/lobbyMessages.model.js')
 // Define routes
 router.post('/createUser', async (req, res) => {
     try {
-        console.log(req.body)
+        //console.log(req.body)
         const { username, email, password} = req.body
 
         const existingUser = await UserModel.findOne({ email });
@@ -43,7 +43,7 @@ router.post('/createUser', async (req, res) => {
 router.post('/authUser', async (req, res) => {
  try {
     const { email, password} = req.body
-    console.log(req.body)
+    //console.log(req.body)
     const user = await userModel.findOne({email})
     if (!user || !(await bcrypt.compare(password,user.password))){
         return res.status(401).json({message: '[-] Invalid email or password'})
@@ -102,9 +102,11 @@ router.post("/getChat", async(req, res)=>{
         } 
 
         const chat = [...decryptedSent, ...decryptedRecived]
-        chat.sort((a, b) => a.createdAt - b.createdAt)
+        //chat.sort((a, b) => a.createdAt - b.createdAt)
+        console.log("este es el chat: ", chat )
         res.status(200).json(chat);
     }catch{
+        console.log("Se bugueo a  la shit. este es el body: ", req.bo);
         res.status(404).json({message: "Not users found"})
     }
 });
