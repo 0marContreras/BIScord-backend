@@ -1,11 +1,16 @@
 const mongoose = require('mongoose');
 
 const lobbySchema = new mongoose.Schema({
-    memberIds: [{
+    lobbyName:{
         type: String,
         required: true,
         trim: true
-    }]
+    },
+    memberIds: {
+        type: Array,
+        required: true,
+        trim: true
+    }
 }, {
     timestamps: true,
     versionKey: false

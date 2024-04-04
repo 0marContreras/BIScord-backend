@@ -38,6 +38,7 @@ const messageModel = require('./models/messages.model.js')
 const privateKey = require('./models/privateKey.model.js')
 const publicKey = require('./models/publicKey.model.js')
 
+const lobbyMsgModel = require('./models/lobbyMessages.model.js')
 
 require('./db.js');
 
@@ -109,6 +110,7 @@ io.on("connection", (socket) => {
         }
     });
 
+
     //El evento logout es importante ya que si el usuario no llama al evento al cerrar la app el servidor PODRIA tronar, no esta comprobado pero podria pasar.
     socket.on("logout", () => {
         console.log(`Socket disconnected: ${socket.id}`);
@@ -120,8 +122,34 @@ io.on("connection", (socket) => {
             console.log(`Users after disconnection:`, users);
         }
     });
+
+    //--------------LOBBY----------------------------------------
+    socket.on('join_lobby', async (lobbyId, userId) => {
+        socket.join(lobbyId);
+    });
+
+socket.on('lobby_message', async (data) => {
+    const { sender, message, lobbyId } = data;
+    // manda el mensaje nada mas a los del lobby que selecciona el usuario
+    const newMessage = new lobbyMsgModel({content: message, senderId: sender, lobbyId: lobbyId}); //guarda en la BD
+    await newMessage.save();
+    io.to(lobbyId).emit('lobby_message', { sender, message });
     
 });
+
+/*
+Ejemplo del body que debe mandar el cliente a lobby_message
+
+socket.emit('lobby_message', {
+    sender: 'current_user_id',
+    message: 'Hello lobby!',
+    lobbyId: 'current_lobby_id'
+});
+*/
+    
+});
+
+
 
 server.listen(3000, () => {
     console.log("Server is running on port 3000");

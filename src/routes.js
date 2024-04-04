@@ -9,6 +9,8 @@ const pkModel = require('./models/privateKey.model.js');
 const pukModel = require('./models/publicKey.model.js');
 const rsaKeys = require('./rsaKeys.js');
 const msg = require('./rsaMessages.js');
+//Lobbies
+const lobbyModel = require('./models/lobbys.model.js');
 
 // Define routes
 router.post('/createUser', async (req, res) => {
@@ -104,6 +106,43 @@ router.post("/getChat", async(req, res)=>{
         res.status(200).json(chat);
     }catch{
         res.status(404).json({message: "Not users found"})
+    }
+});
+
+router.post('/createLobby', async (req, res) => {
+    try {
+        const { lobbyName, memberIds } = req.body;
+        const newLobby = new lobbyModel({ lobbyName: lobbyName, memberIds });
+        await newLobby.save();
+        res.status(201).json(newLobby);
+    } catch (error) {
+        res.status(500).json({ message: '[-] ' + error.message });
+    }
+});
+
+router.post('/joinLobby', async (req, res) => {
+    try {
+        const { lobbyId, memberId } = req.body;
+        const lobby = await lobbyModel.findById(lobbyId);
+        if (!lobby) {
+            return res.status(404).json({ message: '[-] Lobby not found' });
+        }
+        lobby.memberIds.push(memberId);
+        await lobby.save();
+        res.status(200).json(lobby);
+    } catch (error) {
+        res.status(500).json({ message: '[-] ' + error.message });
+    }
+});
+
+router.post('/getUserLobbies', async (req, res) => {
+    try {
+        const { userId } = req.body;
+      
+        const userLobbies = await lobbyModel.find({ memberIds: { $in: [userId] } });
+        res.status(200).json(userLobbies);
+    } catch (error) {
+        res.status(500).json({ message: '[-] ' + error.message });
     }
 });
 module.exports = router;
