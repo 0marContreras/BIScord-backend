@@ -11,7 +11,7 @@ const rsaKeys = require('./rsaKeys.js');
 const msg = require('./rsaMessages.js');
 //Lobbies
 const lobbyModel = require('./models/lobbys.model.js');
-
+const lobbyMessagesModel = require('./models/lobbyMessages.model.js')
 // Define routes
 router.post('/createUser', async (req, res) => {
     try {
@@ -141,6 +141,17 @@ router.post('/getUserLobbies', async (req, res) => {
       
         const userLobbies = await lobbyModel.find({ memberIds: { $in: [userId] } });
         res.status(200).json(userLobbies);
+    } catch (error) {
+        res.status(500).json({ message: '[-] ' + error.message });
+    }
+});
+
+router.post('/getLobbyMessages', async (req, res) => {
+    try {
+        const { lobbyId } = req.body;
+      
+        const lobbyMsgs = await lobbyMessagesModel.find({ lobbyId: lobbyId});
+        res.status(200).json(lobbyMsgs);
     } catch (error) {
         res.status(500).json({ message: '[-] ' + error.message });
     }
