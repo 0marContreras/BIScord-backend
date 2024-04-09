@@ -124,12 +124,16 @@ router.post('/createLobby', async (req, res) => {
 
 router.post('/joinLobby', async (req, res) => {
     try {
-        const { lobbyId, memberId } = req.body;
-        const lobby = await lobbyModel.findById(lobbyId);
+        const { lobbyName, userEmail } = req.body;
+        const lobby = await lobbyModel.findOne({ lobbyName: lobbyName });
         if (!lobby) {
             return res.status(404).json({ message: '[-] Lobby not found' });
         }
-        lobby.memberIds.push(memberId);
+        // Verificar si el usuario ya es miembro del lobby
+        if (lobby.memberIds.includes(userEmail)) {
+            return res.status(400).json({ message: '[-] User already a member of the lobby' });
+        }
+        lobby.memberIds.push(userEmail);
         await lobby.save();
         res.status(200).json(lobby);
     } catch (error) {
