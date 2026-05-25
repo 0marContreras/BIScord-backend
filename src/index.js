@@ -1,3 +1,30 @@
+/*
+                                            .      //
+                                       /) \ |\    //
+  OC                             (\\|  || \)u|   |F     /)
+                                  \```.FF  \  \  |J   .'/
+                               __  `.  `|   \  `-'J .'.'
+        ______           __.--'  `-. \_ J    >.   `'.'   .
+    _.-'      ""`-------'           `-.`.`. / )>.  /.' .<'
+  .'                                   `-._>--' )\ `--''
+  F .                                          ('.--'"
+ (_/                                            '\
+  \                                             'o`.
+  |\                                                `.
+  J \          |              /      |                \
+   L \                       J       (             .  |
+   J  \      .               F        _.--'`._  /`. \_)
+    F  `.    |                       /        ""   "'
+    F   /\   |_          ___|   `-_.'
+   /   /  F  J `--.___.-'   F  - /
+  /    F  |   L            J    /|
+ (_   F   |   L            F  .'||
+  L  F    |   |           |  /J  |
+  | J     `.  |           | J  | |              ____.---.__
+  |_|______ \  L          | F__|_|___.---------'
+--'        `-`--`--.___.-'-'---
+*/
+
 const express = require('express');
 const http = require('http');
 const socket = require("socket.io");
@@ -11,6 +38,7 @@ const messageModel = require('./models/messages.model.js')
 const privateKey = require('./models/privateKey.model.js')
 const publicKey = require('./models/publicKey.model.js')
 
+const lobbyMsgModel = require('./models/lobbyMessages.model.js')
 
 require('./db.js');
 
@@ -30,7 +58,7 @@ app.use('/', routes);
 const users = {};
 
 io.on("connection", (socket) => {
-    console.log("connected");
+    //console.log("connected");
 
     // Cuando un usuario se conecta, Guarda su email junto con un socket ID generado automaticamente
     socket.on('login', (email) => {
@@ -56,6 +84,7 @@ io.on("connection", (socket) => {
 
         // checa si esta conectado y si no se lo madrea... digo nomas lo guarda en la db
         if (users[receptor]) {
+            console.log("entro este mensaje: ", message)
             io.to(users[receptor]).emit('private_message', { sender, message });
 
             const pubKeyInfo = await publicKey.findOne({ userId: receptor});
@@ -82,6 +111,7 @@ io.on("connection", (socket) => {
         }
     });
 
+
     //El evento logout es importante ya que si el usuario no llama al evento al cerrar la app el servidor PODRIA tronar, no esta comprobado pero podria pasar.
     socket.on("logout", () => {
         console.log(`Socket disconnected: ${socket.id}`);
@@ -93,8 +123,34 @@ io.on("connection", (socket) => {
             console.log(`Users after disconnection:`, users);
         }
     });
+
+    //--------------LOBBY----------------------------------------
+    socket.on('join_lobby', async (lobbyId, userId) => {
+        socket.join(lobbyId);
+    });
+
+socket.on('lobby_message', async (data) => {
+    const { sender, message, lobbyId } = data;
+    // manda el mensaje nada mas a los del lobby que selecciona el usuario
+    const newMessage = new lobbyMsgModel({content: message, senderId: sender, lobbyId: lobbyId}); //guarda en la BD
+    await newMessage.save();
+    io.to(lobbyId).emit('lobby_message', { sender, message });
     
 });
+
+/*
+Ejemplo del body que debe mandar el cliente a lobby_message
+
+socket.emit('lobby_message', {
+    sender: 'current_user_id',
+    message: 'Hello lobby!',
+    lobbyId: 'current_lobby_id'
+});
+*/
+    
+});
+
+
 
 server.listen(3000, () => {
     console.log("Server is running on port 3000");
